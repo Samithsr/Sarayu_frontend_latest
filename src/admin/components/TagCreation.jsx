@@ -10,6 +10,7 @@ import { IoSearch } from "react-icons/io5";
 const TagCreation = () => {
   const [createTagname, setCreateTagname] = useState("");
   const [createUnit, setCreateUnit] = useState("");
+  const [createLabel, setCreateLabel] = useState(""); // New state for label
   const [topiCreated, setTopicCreated] = useState(false);
   const [createTagnameValidationError, setCreateTagnameValidationError] =
     useState("");
@@ -33,6 +34,11 @@ const TagCreation = () => {
     setCreateUnit(e.target.value);
   };
 
+  const handleLabelChange = (e) => { // New handler for label
+    setCreateTagnameValidationError("");
+    setCreateLabel(e.target.value);
+  };
+
   const validateInputs = () => {
     const tagnameRegex = /^[a-zA-Z0-9_]+\/[a-zA-Z0-9_]+\/[a-zA-Z0-9_]+$/;
     if (!tagnameRegex.test(createTagname)) {
@@ -40,6 +46,10 @@ const TagCreation = () => {
       return false;
     }
     if (!createUnit.trim()) {
+      setCreateTagnameValidationError("admin_alltopics_error_color");
+      return false;
+    }
+    if (!createLabel.trim()) { // Validate label
       setCreateTagnameValidationError("admin_alltopics_error_color");
       return false;
     }
@@ -89,16 +99,18 @@ const TagCreation = () => {
 
   const handleCreateTopic = async () => {
     if (!validateInputs()) return;
-    const combinedTopic = `${createTagname}|${createUnit}`;
-    
+    const combinedTopic = `${createTagname}|${createUnit}|${createLabel}`; // Include label in topic
+
     try {
       await apiClient.post("/mqtt/create-tagname", {
         topic: combinedTopic,
+        label: createLabel // Pass label to API
       });
       toast.success("TagName created successfully!");
       await fetchRecentFiveTopics();
       setCreateTagname("");
       setCreateUnit("");
+      setCreateLabel(""); // Reset label
       setCreateTagnameValidationError("");
       setTopicCreated(!topiCreated);
     } catch (error) {
@@ -108,11 +120,12 @@ const TagCreation = () => {
 
   const handleCreateAndSubscribeTopic = async () => {
     if (!validateInputs()) return;
-    const combinedTopic = `${createTagname}|${createUnit}`;
+    const combinedTopic = `${createTagname}|${createUnit}|${createLabel}`; // Include label in topic
 
     try {
       await apiClient.post("/mqtt/create-tagname", {
         topic: combinedTopic,
+        label: createLabel // Pass label to API
       });
       toast.success("TagName created successfully!");
       await apiClient.post("/mqtt/subscribe", {
@@ -123,6 +136,7 @@ const TagCreation = () => {
       await fetchRecentFiveTopics();
       setCreateTagname("");
       setCreateUnit("");
+      setCreateLabel(""); // Reset label
       setCreateTagnameValidationError("");
       setTopicCreated(!topiCreated);
     } catch (error) {
@@ -173,7 +187,7 @@ const TagCreation = () => {
             <p
               className={`admin_tagcreation_container_note ${createTagnameValidationError}`}
             >
-              Format: company/device/tagname | unit
+              Format: company/device/tagname | unit | label
             </p>
             <input
               type="text"
@@ -189,54 +203,22 @@ const TagCreation = () => {
               placeholder="Enter unit (e.g., m/s)"
               className="mt-3"
             />
+            <input
+              type="text"
+              value={createLabel}
+              onChange={handleLabelChange}
+              placeholder="Enter label"
+              className="mt-3"
+            />
             <div className="admin_tagcreation_button_container">
               <button onClick={handleCreateTopic}>Create</button>
               <button onClick={handleCreateAndSubscribeTopic}>
                 Create & Subscribe
               </button>
             </div>
-          </div>
-          <div className="admin_create_topics_hr"></div>
-          <div className="admin_tagcreation_subscribeall_container">
-            <div className="admin_tagcreation_subscribeall_recent_5_container">
-              <div>
-                <p>Recent 5 Topics</p>
-              </div>
-              <div className="admin_tagcreation_subscribeall_recent_5_table_container">
-                <table className="admin_tagcreation_subscribeall_recent_5_table">
-                  <thead>
-                    <tr>
-                      <th>TagName</th>
-                      <th>Delete</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recetntFiveTopic?.map((item, index) => {
-                      return (
-                        <tr key={index}>
-                          <td>{item.topic}</td>
-                          <td>
-                            <MdDelete
-                              onClick={() => [
-                                setTopicToDelete(item.topic),
-                                setShowTopicDeleteModel(true),
-                              ]}
-                              color="red"
-                              size={"20"}
-                              style={{ cursor: "pointer" }}
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div className="admin_create_topics_hr"></div>
-            <div className="admin_topiccreation_subscribe_all_button">
+            {/* <div className="admin_topiccreation_subscribe_all_button">
               <IoIosWarning size={"20"} /> Subscribe to All TagNames
-            </div>
+            </div> */}
           </div>
         </div>
         <div className="admin_tagcreation_all_topics_container">

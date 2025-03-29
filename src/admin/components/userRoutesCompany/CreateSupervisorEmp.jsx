@@ -38,7 +38,7 @@ const CreateRooms = () => {
   const [newSupervisorId, setNewSupervisorId] = useState("");
   const [deleteId, setDeleteId] = useState("");
   const [deletingUserEmail, setDeletingUserEmail] = useState("");
-  const [createNavCount, setCreateNavCount] = useState(1);
+  const [createNavCount, setCreateNavCount] = useState(2);
   const [createManager, setCreateManager] = useState({
     name: "",
     email: "",
@@ -296,7 +296,7 @@ const CreateRooms = () => {
           {/* Company details popup ends here */}
         </section>
         <div>
-          <section>
+          {/* <section>
             <CircularProgressBar percent={manager.length} role="manager" />
             <span>
               Managers{" "}
@@ -311,14 +311,14 @@ const CreateRooms = () => {
                 ]}
               />
             </span>
-          </section>
+          </section> */}
           <section>
             <CircularProgressBar
               percent={supervisorList.length}
               role="supervisor"
             />
             <span>
-              Supervisors{" "}
+              Manager{" "}
               <BsFillInfoCircleFill
                 className="admin_users_view_workers_icon"
                 onClick={() => [
@@ -425,15 +425,15 @@ const CreateRooms = () => {
       {/* show all workers ends here */}
       <div className="admin_users_switch_manager_supervisor_employee_container mt-5 mb-5">
         <div className="admin_users_switch_manager_supervisor_employee_container_div">
-          <div>
+          {/* <div>
             <button onClick={() => setCreateNavCount(1)}>Create Manager</button>
             {createNavCount === 1 && (
               <span className="admin_user_create_nav_active"></span>
             )}
-          </div>
+          </div> */}
           <div>
             <button onClick={() => setCreateNavCount(2)}>
-              Create Supervisor
+              Create Manager
             </button>
             {createNavCount === 2 && (
               <span className="admin_user_create_nav_active"></span>
@@ -450,7 +450,7 @@ const CreateRooms = () => {
         </div>
       </div>
 
-      {createNavCount === 1 && (
+      {/* {createNavCount === 1 && (
         <CreateMSE
           title="Create Manager"
           userData={createManager}
@@ -459,10 +459,10 @@ const CreateRooms = () => {
           handleSubmit={handleCreateManager}
           showSupervisorDropdown={false}
         />
-      )}
+      )} */}
       {createNavCount === 2 && (
         <CreateMSE
-          title="Create Supervisor"
+          title="Create Manager"
           userData={createSupervisor}
           userError={supervisorError}
           handleChange={handleSupervisorChange}

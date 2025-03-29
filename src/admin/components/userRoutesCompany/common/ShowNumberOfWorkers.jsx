@@ -188,7 +188,7 @@ const ShowNumberOfWorkers = ({
                 <option value="manager">Manager</option>
               )} */}
               {role === "Employee" && (
-                <option value="supervisor">Supervisor</option>
+                <option value="supervisor">Manager</option>
               )}
             </select>
             <MdClose
@@ -245,7 +245,7 @@ const ShowNumberOfWorkers = ({
                     `admin_show_all_managers_second_popup_table_active_th`
                   }
                 >
-                  Supervisor
+                  Manager
                 </th>
               )}
               <th>Delete</th>
@@ -343,7 +343,7 @@ const ShowNumberOfWorkers = ({
               data-aos-once="true"
               className="admin_users_operator_changeall_supervisor_model_second_container"
             >
-              <p>Change Supervisor</p>
+              <p>Change Manager</p>
               <div>
                 <select
                   name="oldSupervisorId"
@@ -363,7 +363,7 @@ const ShowNumberOfWorkers = ({
                   value={newSupervisorId}
                   onChange={(e) => setNewSupervisorId(e.target.value)}
                 >
-                  <option value="">Select new supervisor</option>
+                  <option value="">Select new manager</option>
                   {supervisorList?.map((item) => (
                     <option key={item._id} value={item._id}>
                       {item?.name}
@@ -392,7 +392,7 @@ const ShowNumberOfWorkers = ({
             <div className="admin_users_edit_single_user_supervisor_model_second_container">
               <div>
                 <p>
-                  Change Supervisor for{" "}
+                  Change Manager for{" "}
                   <b style={{ textTransform: "capitalize" }}>
                     {selectedEmpNameForEditSupervisor}
                   </b>

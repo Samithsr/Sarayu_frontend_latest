@@ -48,7 +48,7 @@ const CreateMSE = ({
                 className="mb-0"
                 style={{ marginLeft: "15px" }}
               >
-                Select Supervisor (Optional)
+                Select Manager (Optional)
               </label>
               <br />
               <select
@@ -63,7 +63,7 @@ const CreateMSE = ({
                   </option>
                 ))}
                 {supervisorList?.length === 0 && (
-                  <option>No Supervisors present!</option>
+                  <option>No Manager present!</option>
                 )}
               </select>
             </div>
@@ -101,6 +101,28 @@ const CreateMSE = ({
           placeholder="Re-enter password here..."
           error={userError.confirmpassword}
         />
+
+{title !== "Create Manager" && <><InputField
+  label="Header"
+  id={`${title.toLowerCase()}name`}
+  name="name"
+  value={userData.name ?? ""} // Fallback to empty string
+  onChange={handleChange}
+  placeholder={`Enter ${title.toLowerCase()} name here...`}
+  error={userError.name ?? ""} // Fallback to empty string
+/>
+<InputField
+  label="Adress"
+  id={`${title.toLowerCase()}email`}
+  name="email"
+  type="text"
+  value={userData.email ?? ""}
+  onChange={handleChange}
+  placeholder={`Enter ${title.toLowerCase()} email here...`}
+  error={userError.email ?? ""}
+/></>}
+
+
         <div>
           <button onClick={handleSubmit}>Create</button>
         </div>
