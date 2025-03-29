@@ -192,9 +192,7 @@ const Dashboard = () => {
               )}
             </div>
           </section>
-
-
-          {/* <section>
+          <section>
             <input
               type="text"
               value={queryInput.manager}
@@ -229,12 +227,7 @@ const Dashboard = () => {
                 <Loader />
               )}
             </div>
-          </section> */ }
-
-
-
-
-
+          </section>
           <section>
             <input
               type="text"
@@ -271,8 +264,6 @@ const Dashboard = () => {
               )}
             </div>
           </section>
-
-
           <section>
             <input
               type="text"

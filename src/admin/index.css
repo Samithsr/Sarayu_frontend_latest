@@ -11,7 +11,7 @@
 ._admin_dashboard_grid_company_container {
     position: relative;
     display: grid;
-    grid-template-columns: 25% 25% 25% 25%;
+    grid-template-columns: 33% 33% 33% ;
 }
 /* admin maptopics model starts here */
 ._admin_dashboard_maptopic_model {
