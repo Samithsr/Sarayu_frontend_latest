@@ -66,6 +66,7 @@ const ShowNumberOfWorkers = ({
   const [removeSupervisorIdFromEmp, setRemoveSupervisorIdFromEmp] =
     useState("");
   const [removeManagerIdFromSuper, setRemoveManagerIdFromSuper] = useState("");
+  
   useEffect(() => {
     if (searchQuery === "") {
       setFilteredData(userList);
@@ -184,9 +185,6 @@ const ShowNumberOfWorkers = ({
               <option value="">Search by...</option>
               <option value="name">Username</option>
               <option value="email">Email</option>
-              {/* {role === "Supervisor" && (
-                <option value="manager">Manager</option>
-              )} */}
               {role === "Employee" && (
                 <option value="supervisor">Manager</option>
               )}
@@ -276,7 +274,7 @@ const ShowNumberOfWorkers = ({
                     ? item.phonenumber
                     : "--"}
                 </td>
-                <td>{role}</td>
+                <td>{role === "Supervisor" ? "Manager" : role}</td>
                 {includeManager && (
                   <td
                     className={`edit_emp_manager_model_icon_supervisor_and_manager_col

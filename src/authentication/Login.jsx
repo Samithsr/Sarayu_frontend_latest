@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setUserDetails } from "../redux/slices/UserDetailsSlice";
 import apiClient from "../api/apiClient";
+import logo from "../authentication/common/LoginBannerLogo/Logo.png";
 
 const Login = () => {
   const [count, setCount] = useState(1);
@@ -37,6 +38,7 @@ const Login = () => {
     const { name, value } = e.target;
     setData({ ...data, [name]: value });
   };
+  
   const handleRoleChange = (e) => {
     setRole(e.target.value);
     setError({
@@ -46,6 +48,7 @@ const Login = () => {
     });
     setLoginError("");
   };
+  
   useEffect(() => {
     setError({
       email: "",
@@ -74,6 +77,7 @@ const Login = () => {
       setCount((prev) => prev + 1);
     }
   };
+  
   const handlePrev = () => {
     if (count > 1) {
       setCount((prev) => prev - 1);
@@ -108,6 +112,7 @@ const Login = () => {
       <LoginLeft />
       <div className="col-12 col-md-6 login_right">
         <div className="two_step_form">
+          <img src={logo} alt="Logo" className="mobile-logo" />
           <div className="login_dots_container">
             <div className="dot active_dot" onClick={handlePrev}>
               <span>
@@ -154,7 +159,6 @@ const Login = () => {
                   >
                     <option value="">Select...</option>
                     <option value="admin">Admin</option>
-                    {/* <option value="manager">Manager</option> */}
                     <option value="supervisor">Manager</option>
                     <option value="employee">Operator</option>
                   </select>
@@ -188,7 +192,7 @@ const Login = () => {
             </div>
             <div className="login_btn_container">
               <button
-                disabled={count === 1 && true}
+                disabled={count === 1}
                 onClick={handlePrev}
                 className="login_prev_btn"
               >

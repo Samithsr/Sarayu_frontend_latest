@@ -102,26 +102,29 @@ const CreateMSE = ({
           error={userError.confirmpassword}
         />
 
-{title !== "Create Manager" && <><InputField
-  label="HeaderOne"
-  id={`${title.toLowerCase()}headerone`}
-  name="headerone"
-  value={userData.headerone ?? ""} // Fallback to empty string
-  onChange={handleChange}
-  placeholder={`Enter ${title.toLowerCase()} headerone here...`}
-  error={userError.name ?? ""} // Fallback to empty string
-/>
-<InputField
-  label="HeaderTwo"
-  id={`${title.toLowerCase()}headertwo`}
-  name="headertwo"
-  type="text"
-  value={userData.headertwo ?? ""}
-  onChange={handleChange}
-  placeholder={`Enter ${title.toLowerCase()} headertwo here...`}
-  error={userError.email ?? ""}
-/></>}
-
+        {title !== "Create Manager" && (
+          <>
+            <InputField
+              label="HeaderOne"
+              id={`${title.toLowerCase()}headerone`}
+              name="headerone"
+              value={userData.headerone ?? ""} // Fallback to empty string
+              onChange={handleChange}
+              placeholder={`Enter ${title.toLowerCase()} headerone here...`}
+              error={userError.name ?? ""} // Fallback to empty string
+            />
+            <InputField
+              label="HeaderTwo"
+              id={`${title.toLowerCase()}headertwo`}
+              name="headertwo"
+              type="text"
+              value={userData.headertwo ?? ""}
+              onChange={handleChange}
+              placeholder={`Enter ${title.toLowerCase()} headertwo here...`}
+              error={userError.email ?? ""}
+            />
+          </>
+        )}
 
         <div>
           <button onClick={handleSubmit}>Create</button>

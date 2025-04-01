@@ -201,7 +201,7 @@ const Dashboard = () => {
               type="text"
               value={queryInput.supervisor}
               name="supervisor"
-              placeholder="Search supervisor..."
+              placeholder="Search manager..."
               onChange={handleInputChange}
             />
             <div className="_admin_dashboard_grid_company_list_container">
@@ -236,7 +236,7 @@ const Dashboard = () => {
               type="text"
               value={queryInput.employee}
               name="employee"
-              placeholder="Search employee..."
+              placeholder="Search user..."
               onChange={handleInputChange}
             />
             <div className="_admin_dashboard_grid_company_list_container">
