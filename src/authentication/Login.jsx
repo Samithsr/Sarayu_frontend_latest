@@ -154,8 +154,8 @@ const Login = () => {
                   >
                     <option value="">Select...</option>
                     <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
-                    <option value="supervisor">Supervisor</option>
+                    {/* <option value="manager">Manager</option> */}
+                    <option value="supervisor">Manager</option>
                     <option value="employee">Operator</option>
                   </select>
                   {error?.role?.length > 0 && (

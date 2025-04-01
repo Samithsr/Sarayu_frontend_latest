@@ -3,8 +3,6 @@ import "../index.css";
 import apiClient from "../../api/apiClient";
 import Loader from "../../users/loader/Loader";
 import { useNavigate } from "react-router-dom";
-import MapTopic from "./DashboardComponents/MapTopic";
-import { IoCloseSharp } from "react-icons/io5";
 import { FiLayout } from "react-icons/fi";
 import LayoutAssign from "./DashboardComponents/LayoutAssign";
 
@@ -18,7 +16,7 @@ const Dashboard = () => {
 
   const [filteredCompanyList, setFilteredCompanyList] = useState([]);
   const [filteredSupervisorList, setFilteredSupervisorList] = useState([]);
-  const [filteredEmployeeList, setFilteredEmployeeList] = useState([]);
+  const [filteredEmployeeList, setFilteredEmployeeList] = useState([]); // Default to empty array
   const [filteredManagerList, setFilteredManagerList] = useState([]);
 
   const [companyLoading, setCompanyLoading] = useState(false);
@@ -34,9 +32,10 @@ const Dashboard = () => {
   });
 
   const [activeCompany, setActiveCompany] = useState("");
+  const [activeSupervisor, setActiveSupervisor] = useState(null);
   const [layoutAssignModel, setLayoutAssignModel] = useState(false);
-  const [laoutAssignuserId, setlayoutAssignUserId] = useState("");
-  const [laoutAssignuserRole, setlayoutAssignUserRole] = useState("");
+  const [layoutAssignUserId, setLayoutAssignUserId] = useState("");
+  const [layoutAssignUserRole, setLayoutAssignUserRole] = useState("");
 
   useEffect(() => {
     fetchCompanyList();
@@ -60,6 +59,8 @@ const Dashboard = () => {
     fetchAllManagers(id);
     fetchAllSupervisors(id);
     fetchAllEmployees(id);
+    setActiveSupervisor(null); // Reset active supervisor when company changes
+    setFilteredEmployeeList([]); // Clear employee list when company changes
   };
 
   const fetchAllManagers = async (id) => {
@@ -78,11 +79,10 @@ const Dashboard = () => {
   const fetchAllSupervisors = async (id) => {
     setSupervisorLoading(true);
     try {
-      const res = await apiClient(
-        `/auth/supervisor/getAllSupervisorOfSameCompany/${id}`
-      );
+      const res = await apiClient(`/auth/supervisor/getAllSupervisorOfSameCompany/${id}`);
       setSupervisorList(res.data.data);
       setFilteredSupervisorList(res.data.data);
+      console.log("list of employees under supervisors : ", res.data.data[0].employees);
       setSupervisorLoading(false);
     } catch (error) {
       console.log(error.message);
@@ -93,11 +93,9 @@ const Dashboard = () => {
   const fetchAllEmployees = async (id) => {
     setEmployeeLoading(true);
     try {
-      const res = await apiClient.get(
-        `/auth/employee/getAllEmployeesOfSameCompany/${id}`
-      );
+      const res = await apiClient.get(`/auth/employee/getAllEmployeesOfSameCompany/${id}`);
       setEmployeeList(res.data.data);
-      setFilteredEmployeeList(res.data.data);
+      // Do not set filteredEmployeeList here to keep it empty by default
       setEmployeeLoading(false);
     } catch (error) {
       console.log(error.message);
@@ -131,25 +129,31 @@ const Dashboard = () => {
     }
 
     if (name === "employee") {
-      const filter = employeeList.filter((item) =>
+      const filter = filteredEmployeeList.filter((item) =>
         item.name.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredEmployeeList(filter);
     }
   };
 
-  const handleLaoutModel = (id, role) => {
-    setlayoutAssignUserId(id);
-    setlayoutAssignUserRole(role);
+  const handleLayoutModel = (id, role) => {
+    setLayoutAssignUserId(id);
+    setLayoutAssignUserRole(role);
     setLayoutAssignModel(true);
+  };
+
+  const handleSetActiveSupervisor = (supervisor) => {
+    setActiveSupervisor(supervisor);
+    // Filter employees based on the selected supervisor's employees array
+    setFilteredEmployeeList(supervisor.employees || []);
   };
 
   return (
     <>
       {layoutAssignModel && (
         <LayoutAssign
-          id={laoutAssignuserId}
-          role={laoutAssignuserRole}
+          id={layoutAssignUserId}
+          role={layoutAssignUserRole}
           setLayoutAssignModel={setLayoutAssignModel}
         />
       )}
@@ -176,12 +180,11 @@ const Dashboard = () => {
                       }}
                       key={item?._id}
                       className={
-                        activeCompany === item?.name &&
-                        "_admin_dashboard_grid_company_list_container_active_li"
+                        activeCompany === item?.name
+                          ? "_admin_dashboard_grid_company_list_container_active_li"
+                          : ""
                       }
-                      onClick={() =>
-                        handleSetActiveCompany(item?.name, item?._id)
-                      }
+                      onClick={() => handleSetActiveCompany(item?.name, item?._id)}
                     >
                       {item?.name}
                     </li>
@@ -192,42 +195,7 @@ const Dashboard = () => {
               )}
             </div>
           </section>
-          <section>
-            <input
-              type="text"
-              value={queryInput.manager}
-              name="manager"
-              placeholder="Search manager..."
-              onChange={handleInputChange}
-            />
-            <div className="_admin_dashboard_grid_company_list_container">
-              {!managerLoading ? (
-                <>
-                  {filteredManagerList?.map((item) => (
-                    <li key={item?._id}>
-                      <p
-                        onClick={() =>
-                          window.open(
-                            `/_dashboard/maptopic/${item?._id}/${item.role}`,
-                            "_blank"
-                          )
-                        }
-                      >
-                        {item?.name}
-                      </p>
-                      <p
-                        onClick={() => handleLaoutModel(item?._id, item?.role)}
-                      >
-                        <FiLayout />
-                      </p>
-                    </li>
-                  ))}
-                </>
-              ) : (
-                <Loader />
-              )}
-            </div>
-          </section>
+
           <section>
             <input
               type="text"
@@ -242,18 +210,16 @@ const Dashboard = () => {
                   {filteredSupervisorList?.map((item) => (
                     <li key={item?._id}>
                       <p
-                        onClick={() =>
-                          window.open(
-                            `/_dashboard/maptopic/${item?._id}/${item.role}`,
-                            "_blank"
-                          )
+                        onClick={() => handleSetActiveSupervisor(item)}
+                        className={
+                          activeSupervisor?._id === item?._id
+                            ? "_admin_dashboard_grid_company_list_container_active_li"
+                            : ""
                         }
                       >
                         {item?.name}
                       </p>
-                      <p
-                        onClick={() => handleLaoutModel(item?._id, item?.role)}
-                      >
+                      <p onClick={() => handleLayoutModel(item?._id, item?.role)}>
                         <FiLayout />
                       </p>
                     </li>
@@ -264,6 +230,7 @@ const Dashboard = () => {
               )}
             </div>
           </section>
+
           <section>
             <input
               type="text"
@@ -277,19 +244,8 @@ const Dashboard = () => {
                 <>
                   {filteredEmployeeList?.map((item) => (
                     <li key={item?._id}>
-                      <p
-                        onClick={() =>
-                          window.open(
-                            `/_dashboard/maptopic/${item?._id}/${item.role}`,
-                            "_blank"
-                          )
-                        }
-                      >
-                        {item?.name}
-                      </p>
-                      <p
-                        onClick={() => handleLaoutModel(item?._id, item?.role)}
-                      >
+                      <p>{item?.name}</p>
+                      <p onClick={() => handleLayoutModel(item?._id, item?.role)}>
                         <FiLayout />
                       </p>
                     </li>

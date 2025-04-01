@@ -103,22 +103,22 @@ const CreateMSE = ({
         />
 
 {title !== "Create Manager" && <><InputField
-  label="Header"
-  id={`${title.toLowerCase()}name`}
-  name="name"
-  value={userData.name ?? ""} // Fallback to empty string
+  label="HeaderOne"
+  id={`${title.toLowerCase()}headerone`}
+  name="headerone"
+  value={userData.headerone ?? ""} // Fallback to empty string
   onChange={handleChange}
-  placeholder={`Enter ${title.toLowerCase()} name here...`}
+  placeholder={`Enter ${title.toLowerCase()} headerone here...`}
   error={userError.name ?? ""} // Fallback to empty string
 />
 <InputField
-  label="Adress"
-  id={`${title.toLowerCase()}email`}
-  name="email"
+  label="HeaderTwo"
+  id={`${title.toLowerCase()}headertwo`}
+  name="headertwo"
   type="text"
-  value={userData.email ?? ""}
+  value={userData.headertwo ?? ""}
   onChange={handleChange}
-  placeholder={`Enter ${title.toLowerCase()} email here...`}
+  placeholder={`Enter ${title.toLowerCase()} headertwo here...`}
   error={userError.email ?? ""}
 /></>}
 
