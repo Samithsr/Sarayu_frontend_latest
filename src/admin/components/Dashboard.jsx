@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../index.css";
 import apiClient from "../../api/apiClient";
 import Loader from "../../users/loader/Loader";
-import { useNavigate } from "react-router-dom";
 import { FiLayout } from "react-icons/fi";
 import LayoutAssign from "./DashboardComponents/LayoutAssign";
 
@@ -16,7 +16,7 @@ const Dashboard = () => {
 
   const [filteredCompanyList, setFilteredCompanyList] = useState([]);
   const [filteredSupervisorList, setFilteredSupervisorList] = useState([]);
-  const [filteredEmployeeList, setFilteredEmployeeList] = useState([]); // Default to empty array
+  const [filteredEmployeeList, setFilteredEmployeeList] = useState([]);
   const [filteredManagerList, setFilteredManagerList] = useState([]);
 
   const [companyLoading, setCompanyLoading] = useState(false);
@@ -59,8 +59,8 @@ const Dashboard = () => {
     fetchAllManagers(id);
     fetchAllSupervisors(id);
     fetchAllEmployees(id);
-    setActiveSupervisor(null); // Reset active supervisor when company changes
-    setFilteredEmployeeList([]); // Clear employee list when company changes
+    setActiveSupervisor(null);
+    setFilteredEmployeeList([]);
   };
 
   const fetchAllManagers = async (id) => {
@@ -82,7 +82,6 @@ const Dashboard = () => {
       const res = await apiClient(`/auth/supervisor/getAllSupervisorOfSameCompany/${id}`);
       setSupervisorList(res.data.data);
       setFilteredSupervisorList(res.data.data);
-      console.log("list of employees under supervisors : ", res.data.data[0].employees);
       setSupervisorLoading(false);
     } catch (error) {
       console.log(error.message);
@@ -95,7 +94,6 @@ const Dashboard = () => {
     try {
       const res = await apiClient.get(`/auth/employee/getAllEmployeesOfSameCompany/${id}`);
       setEmployeeList(res.data.data);
-      // Do not set filteredEmployeeList here to keep it empty by default
       setEmployeeLoading(false);
     } catch (error) {
       console.log(error.message);
@@ -129,7 +127,7 @@ const Dashboard = () => {
     }
 
     if (name === "employee") {
-      const filter = filteredEmployeeList.filter((item) =>
+      const filter = employeeList.filter((item) =>
         item.name.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredEmployeeList(filter);
@@ -144,13 +142,13 @@ const Dashboard = () => {
 
   const handleSetActiveSupervisor = (supervisor) => {
     setActiveSupervisor(supervisor);
-    // Filter employees based on the selected supervisor's employees array
     setFilteredEmployeeList(supervisor.employees || []);
   };
 
   return (
     <>
-      {layoutAssignModel && (
+{
+      layoutAssignModel && (
         <LayoutAssign
           id={layoutAssignUserId}
           role={layoutAssignUserRole}
@@ -201,7 +199,7 @@ const Dashboard = () => {
               type="text"
               value={queryInput.supervisor}
               name="supervisor"
-              placeholder="Search manager..."
+              placeholder="Search supervisor..."
               onChange={handleInputChange}
             />
             <div className="_admin_dashboard_grid_company_list_container">
@@ -236,7 +234,7 @@ const Dashboard = () => {
               type="text"
               value={queryInput.employee}
               name="employee"
-              placeholder="Search user..."
+              placeholder="Search employee..."
               onChange={handleInputChange}
             />
             <div className="_admin_dashboard_grid_company_list_container">
@@ -244,7 +242,17 @@ const Dashboard = () => {
                 <>
                   {filteredEmployeeList?.map((item) => (
                     <li key={item?._id}>
-                      <p>{item?.name}</p>
+                      <p
+                        onClick={() =>
+                          window.open(
+                            `/_dashboard/maptopic/${item?._id}/${item.role}`,
+                            "_blank"
+                          )
+                        }
+                        style={{ cursor: "pointer" }}
+                      >
+                        {item?.name}
+                      </p>
                       <p onClick={() => handleLayoutModel(item?._id, item?.role)}>
                         <FiLayout />
                       </p>
