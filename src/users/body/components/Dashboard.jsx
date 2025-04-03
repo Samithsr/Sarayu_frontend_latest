@@ -23,13 +23,18 @@ import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 const Dashboard = () => {
   const [loggedInUser, setLoggedInUser] = useState({});
   const [localLoading, setLocalLoading] = useState(false);
+  const [operatorsList, setOperatorsList] = useState([]);
+  const [selectedOperator, setSelectedOperator] = useState("");
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.userSlice);
   const [favoriteList, setFavoriteList] = useState([]);
   const [graphwlList, setGraphwlList] = useState([]);
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(0);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "none" });
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: "none",
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
   const [timestamps, setTimestamps] = useState({});
@@ -48,15 +53,14 @@ const Dashboard = () => {
     const timestamp = timestamps[topic];
     if (!timestamp) return "-";
 
-    // Assuming timestamp is in UTC, convert to IST (UTC+5:30)
     const lastUpdateUTC = new Date(timestamp);
-    const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in milliseconds
+    const istOffset = 5.5 * 60 * 60 * 1000;
     const lastUpdateIST = new Date(lastUpdateUTC.getTime() + istOffset);
     const currentTimeIST = new Date(currentTime.getTime() + istOffset);
 
     const diffSeconds = Math.floor((currentTimeIST - lastUpdateIST) / 1000);
 
-    if (diffSeconds < 0) return "Just now"; // Handle future timestamps
+    if (diffSeconds < 0) return "Just now";
     if (diffSeconds < 60) return `${diffSeconds}s ago`;
     const minutes = Math.floor(diffSeconds / 60);
     return `${minutes}m ago`;
@@ -70,7 +74,7 @@ const Dashboard = () => {
     }));
   }, []);
 
-  // Fetch user details and update local state
+  // Fetch user details and operators list
   const fetchUserDetails = useCallback(async () => {
     setLocalLoading(true);
     try {
@@ -80,8 +84,18 @@ const Dashboard = () => {
       dispatch(setUserDetails(userData));
       setFavoriteList(userData?.favorites || []);
       setGraphwlList(userData?.graphwl || []);
+
+      // Fetch operators list if company ID exists
+      if (userData?.company?._id) {
+        const operatorsRes = await apiClient.get(
+          `/auth/employee/getAllEmployeesOfSameCompany/${userData.company._id}`
+        );
+        setOperatorsList(operatorsRes?.data?.data || []);
+      }
     } catch (error) {
-      toast.error(error?.response?.data?.error || "Failed to fetch user details");
+      toast.error(
+        error?.response?.data?.error || "Failed to fetch user details"
+      );
     } finally {
       setLocalLoading(false);
     }
@@ -96,53 +110,84 @@ const Dashboard = () => {
     setCurrentPage(0);
   }, [searchQuery]);
 
-  // Favorite and graph watchlist handlers (wrapped in useCallback)
-  const handleAddFavorite = useCallback(async (topic) => {
-    try {
-      await apiClient.post(`/auth/${user.role}/${user.id}/favorites`, { topic });
-      setFavoriteList((prev) => [...prev, topic]);
-      toast.success("Tagname added to watchlist");
-    } catch (error) {
-      toast.error(error?.response?.data?.error || "Failed to add topic to favorites");
-    }
-  }, [user.role, user.id]);
+  // Favorite and graph watchlist handlers
+  const handleAddFavorite = useCallback(
+    async (topic) => {
+      try {
+        await apiClient.post(`/auth/${user.role}/${user.id}/favorites`, {
+          topic,
+        });
+        setFavoriteList((prev) => [...prev, topic]);
+        toast.success("Tagname added to watchlist");
+      } catch (error) {
+        toast.error(
+          error?.response?.data?.error || "Failed to add topic to favorites"
+        );
+      }
+    },
+    [user.role, user.id]
+  );
 
-  const handleRemoveFavorite = useCallback(async (topic) => {
-    try {
-      await apiClient.delete(`/auth/${user.role}/${user.id}/favorites`, { data: { topic } });
-      setFavoriteList((prev) => prev.filter((fav) => fav !== topic));
-      toast.success("Topic removed from watchlist");
-    } catch (error) {
-      toast.error(error?.response?.data?.error || "Failed to remove topic from watchlist");
-    }
-  }, [user.role, user.id]);
+  const handleRemoveFavorite = useCallback(
+    async (topic) => {
+      try {
+        await apiClient.delete(`/auth/${user.role}/${user.id}/favorites`, {
+          data: { topic },
+        });
+        setFavoriteList((prev) => prev.filter((fav) => fav !== topic));
+        toast.success("Topic removed from watchlist");
+      } catch (error) {
+        toast.error(
+          error?.response?.data?.error ||
+            "Failed to remove topic from watchlist"
+        );
+      }
+    },
+    [user.role, user.id]
+  );
 
-  const handleAddGraphwl = useCallback(async (topic) => {
-    try {
-      await apiClient.post(`/auth/${user.role}/${user.id}/graphwl`, { topic });
-      setGraphwlList((prev) => [...prev, topic]);
-      toast.success("Tagname added to graph watchlist");
-    } catch (error) {
-      toast.error(error?.response?.data?.error || "Failed to add topic to graph watchlist");
-    }
-  }, [user.role, user.id]);
+  const handleAddGraphwl = useCallback(
+    async (topic) => {
+      try {
+        await apiClient.post(`/auth/${user.role}/${user.id}/graphwl`, {
+          topic,
+        });
+        setGraphwlList((prev) => [...prev, topic]);
+        toast.success("Tagname added to graph watchlist");
+      } catch (error) {
+        toast.error(
+          error?.response?.data?.error ||
+            "Failed to add topic to graph watchlist"
+        );
+      }
+    },
+    [user.role, user.id]
+  );
 
-  const handleRemoveGraphwl = useCallback(async (topic) => {
-    try {
-      await apiClient.delete(`/auth/${user.role}/${user.id}/graphwl`, { data: { topic } });
-      setGraphwlList((prev) => prev.filter((fav) => fav !== topic));
-      toast.success("Topic removed from graph watchlist");
-    } catch (error) {
-      toast.error(error?.response?.data?.error || "Failed to remove topic from graph watchlist");
-    }
-  }, [user.role, user.id]);
+  const handleRemoveGraphwl = useCallback(
+    async (topic) => {
+      try {
+        await apiClient.delete(`/auth/${user.role}/${user.id}/graphwl`, {
+          data: { topic },
+        });
+        setGraphwlList((prev) => prev.filter((fav) => fav !== topic));
+        toast.success("Topic removed from graph watchlist");
+      } catch (error) {
+        toast.error(
+          error?.response?.data?.error ||
+            "Failed to remove topic from graph watchlist"
+        );
+      }
+    },
+    [user.role, user.id]
+  );
 
-  // Pagination handler wrapped in useCallback
+  // Pagination handler
   const handlePageClick = useCallback(({ selected }) => {
     setCurrentPage(selected);
   }, []);
 
-  // Sorting functionality using useCallback to update sort configuration
+  // Sorting functionality
   const handleSort = useCallback((key) => {
     setSortConfig((prevSortConfig) => {
       let direction = "asc";
@@ -153,32 +198,45 @@ const Dashboard = () => {
           direction = "none";
         }
       }
-      return direction === "none" ? { key: null, direction: "none" } : { key, direction };
+      return direction === "none"
+        ? { key: null, direction: "none" }
+        : { key, direction };
     });
   }, []);
 
-  const getSortSymbol = useCallback((key) => {
-    if (sortConfig.key === key) {
-      return sortConfig.direction === "asc" ? <IoMdArrowDropup /> : sortConfig.direction === "desc" ? <IoMdArrowDropdown /> : "↔";
-    }
-    return "↔";
-  }, [sortConfig]);
+  const getSortSymbol = useCallback(
+    (key) => {
+      if (sortConfig.key === key) {
+        return sortConfig.direction === "asc" ? (
+          <IoMdArrowDropup />
+        ) : sortConfig.direction === "desc" ? (
+          <IoMdArrowDropdown />
+        ) : (
+          "↔"
+        );
+      }
+      return "↔";
+    },
+    [sortConfig]
+  );
 
   // Parse topics and add dummy data for sorting
   const parsedTopics = useMemo(() => {
-    return loggedInUser?.topics?.map((topic) => {
-      const [path, unit] = topic.split("|");
-      const tagName = path.split("/")[2];
-      return {
-        topic,
-        tagName,
-        unit: unit || "-",
-        isFFT: unit === "fft",
-        weekMax: Math.random() * 100,
-        yesterdayMax: Math.random() * 100,
-        todayMax: Math.random() * 100,
-      };
-    }) || [];
+    return (
+      loggedInUser?.topics?.map((topic) => {
+        const [path, unit] = topic.split("|");
+        const tagName = path.split("/")[2];
+        return {
+          topic,
+          tagName,
+          unit: unit || "-",
+          isFFT: unit === "fft",
+          weekMax: Math.random() * 100,
+          yesterdayMax: Math.random() * 100,
+          todayMax: Math.random() * 100,
+        };
+      }) || []
+    );
   }, [loggedInUser?.topics]);
 
   // Filter topics based on search query
@@ -214,21 +272,34 @@ const Dashboard = () => {
   }, [sortedParsedTopics, currentPage, itemsPerPage]);
 
   // Memoize page count calculation
-  const pageCount = useMemo(() => Math.ceil(sortedParsedTopics.length / itemsPerPage), [sortedParsedTopics, itemsPerPage]);
+  const pageCount = useMemo(
+    () => Math.ceil(sortedParsedTopics.length / itemsPerPage),
+    [sortedParsedTopics, itemsPerPage]
+  );
+
+  // Handle operator selection
+  const handleOperatorChange = (e) => {
+    const operatorId = e.target.value;
+    setSelectedOperator(operatorId);
+    if (operatorId) {
+      navigate(`/allusers/singleuserdashboard/${operatorId}`);
+    }
+  };
 
   if (localLoading) return <Loader />;
 
   return (
     <div className="allusers_dashboard_main_container">
-      {/* Search Bar */}
+      {/* Search Bar and Operators Dropdown */}
       <div style={{ maxWidth: "100vw", margin: "20px auto", padding: "0 15px" }}>
         <input
+          className="allusers_dashboard_search_by_tagname_main_container_"
           type="text"
           placeholder="Search by tag name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
-            width: "100%",
+            width: "30%",
             borderRadius: "25px",
             padding: "7px 17px",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
@@ -236,6 +307,25 @@ const Dashboard = () => {
             outline: "none",
           }}
         />
+        <select
+          name="operators"
+          id="operators"
+          className="company-dropdown"
+          value={selectedOperator}
+          onChange={handleOperatorChange}
+        >
+          <option value="" disabled>
+            Select an Operator
+          </option>
+          {operatorsList.map((operator) => (
+            <option key={operator._id} value={operator._id}>
+              {operator.name}     
+
+
+              {/* ({operator.email})  u want email also in drop down pass email also */}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="alluser_alloperators_container">
@@ -244,7 +334,10 @@ const Dashboard = () => {
             <thead>
               <tr>
                 <th style={{ background: "red" }}>TagName</th>
-                <th className="allusers_dashboard_live_data_th" style={{ background: "rgb(150, 2, 208)" }}>
+                <th
+                  className="allusers_dashboard_live_data_th"
+                  style={{ background: "rgb(150, 2, 208)" }}
+                >
                   Live
                 </th>
                 <th>Unit</th>
@@ -262,13 +355,19 @@ const Dashboard = () => {
             <tbody>
               {currentItems.map(({ topic, tagName, unit, isFFT }, index) => (
                 <tr key={`${topic}-${index}`}>
-                  <td style={{ background: "#34495e", color: "white" }}>{tagName}</td>
-                  <LiveDataTd 
-                    topic={topic} 
+                  <td style={{ background: "#34495e", color: "white" }}>
+                    {tagName}
+                  </td>
+                  <LiveDataTd
+                    topic={topic}
                     onTimestampUpdate={handleTimestampUpdate}
                   />
-                  <td style={{ background: "#34495e", color: "white" }}>{unit}</td>
-                  <td style={{ background: "#34495e", color: "white" }}>{getRelativeTime(topic)}</td>
+                  <td style={{ background: "#34495e", color: "white" }}>
+                    {unit}
+                  </td>
+                  <td style={{ background: "#34495e", color: "white" }}>
+                    {getRelativeTime(topic)}
+                  </td>
                   <TodayTd topic={topic} />
                   <YestardayTd topic={topic} />
                   <WeekTd topic={topic} />
@@ -278,7 +377,11 @@ const Dashboard = () => {
                         size={20}
                         style={{ cursor: "pointer", color: "gray" }}
                         className="icon"
-                        onClick={() => navigate(`/allusers/report/${encodeURIComponent(topic)}`)}
+                        onClick={() =>
+                          navigate(
+                            `/allusers/report/${encodeURIComponent(topic)}`
+                          )
+                        }
                       />
                     )}
                   </td>
@@ -287,7 +390,13 @@ const Dashboard = () => {
                       size={20}
                       style={{ cursor: "pointer", color: "gray" }}
                       className="icon"
-                      onClick={() => navigate(`/allusers/layoutview/${encodeURIComponent(topic)}/${loggedInUser?.layout}`)}
+                      onClick={() =>
+                        navigate(
+                          `/allusers/layoutview/${encodeURIComponent(topic)}/${
+                            loggedInUser?.layout
+                          }`
+                        )
+                      }
                     />
                   </td>
                   <td className="allusers_dashboard_graph_digital_td">
@@ -297,15 +406,37 @@ const Dashboard = () => {
                           size={18}
                           style={{ cursor: "pointer" }}
                           className="icon"
-                          onClick={() => navigate(`/allusers/editsinglegraph/${encodeURIComponent(topic)}`)}
+                          onClick={() =>
+                            navigate(
+                              `/allusers/editsinglegraph/${encodeURIComponent(
+                                topic
+                              )}`
+                            )
+                          }
                         />
                       )}
                     </button>
-                    <button onClick={() => navigate(`/allusers/viewsinglegraph/${encodeURIComponent(topic)}`)}>
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/allusers/viewsinglegraph/${encodeURIComponent(
+                            topic
+                          )}`
+                        )
+                      }
+                    >
                       <VscGraph />
                     </button>
                     {!isFFT && (
-                      <button onClick={() => navigate(`/allusers/singledigitalmeter/${encodeURIComponent(topic)}/${user.role}/${user.id}`)}>
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/allusers/singledigitalmeter/${encodeURIComponent(
+                              topic
+                            )}/${user.role}/${user.id}`
+                          )
+                        }
+                      >
                         <FaDigitalOcean style={{ cursor: "pointer" }} />
                       </button>
                     )}

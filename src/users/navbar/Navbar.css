@@ -145,13 +145,33 @@
     transform: translateY(-10px);
     text-shadow: 0 4px 4px rgba(0, 0, 0, 0.364);
 }
+
+
+
+
+
+
+
+
+
+
+
+
 .users_navbar_separate_second_div{
     width: 60%;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    justify-content: center;
+    align-items: start;
     padding: 10px 0;
 }
+
+
+
+
+
+
+
 .users_navbar_separate_second_div > p{
     margin: 0;
     line-height: 1.7rem;
@@ -169,8 +189,16 @@
     color: blue;
 }
 
+
+
+
+
+
+
+
 .users_navbar_separate_thrid_div{
     width: 20%;
+    right: 0;
     display: flex;
     align-items: start;
     justify-content: center;
@@ -183,6 +211,31 @@
     align-items: center;
     gap: 4px;
 }
+
+.users_navbar_separate_thrid_div_info:hover{
+    background-color: red;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* company name style ends here */
 
 /* mediaquery starts here */

@@ -16,6 +16,8 @@ import ChangePassword from "./../body/components/ChangePassword";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { HiMiniBuildingOffice } from "react-icons/hi2";
 import { FaUser } from "react-icons/fa";
+import { FaInfoCircle } from 'react-icons/fa';
+import iiot from '../../authentication/common/LoginBannerLogo/iiot.jpg'
 
 const Navbar = () => {
   const { user } = useSelector((state) => state.userSlice);
@@ -27,6 +29,7 @@ const Navbar = () => {
   const [localLoading, setLocalLoading] = useState(false);
   const [changePasswordModel, setChangePasswordModel] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [showInfoDetails, setShowInfoDetails] = useState(false);
 
   useEffect(() => {
     if (user.id) {
@@ -34,12 +37,10 @@ const Navbar = () => {
     }
   }, [user.id]);
 
-  // Add useEffect for updating date and time
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentDateTime(new Date());
-    }, 1000); // Update every second
-
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -72,10 +73,9 @@ const Navbar = () => {
     <div className="users_navbar_separate_container">
       <div className="users_navbar_separate_first_div">
         <div>
-        <img src="https://sarayuinfotech.in/images/sarayu/Logo/sarayu-comp-icon.png" alt="company logo" />
+        <img src={iiot} alt="" />
         </div>
         <div>
-          <p>Sarayu IOT</p>
         </div>
       </div>
       <div className="users_navbar_separate_second_div">
@@ -83,11 +83,45 @@ const Navbar = () => {
         <p>177 12th A Cross, Mahalakshmipuram, 2nd Stage, Bengaluru, Karnataka 560086</p>
         <p><span>{formattedDate}</span><span>{formattedTime}</span></p>
       </div>
+
       <div className="users_navbar_separate_thrid_div">
-        <p><HiMiniBuildingOffice style={{color:"red"}}/> Company       : {loggedInUser?.company?.name}</p>
-        <p><FaUser style={{color:"red"}} /> Logged in as : {loggedInUser?.name}</p>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <FaInfoCircle 
+            style={{ 
+              marginRight: '8px', 
+              cursor: 'pointer',
+              color: '#666'
+            }}
+            onClick={() => setShowInfoDetails(!showInfoDetails)}
+          />
+          <div>
+            
+          </div>
+
+          {showInfoDetails && (
+            <div  className="users_navbar_separate_thrid_div_info"
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                background: 'white',
+                padding: '10px',
+                borderRadius: '4px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                zIndex: 1000,
+                minWidth: '1200px'
+              }}
+            >
+              <p><HiMiniBuildingOffice style={{color:"red"}}/> Company : {loggedInUser?.company?.name}</p>
+              <p><FaUser style={{color:"red"}} /> Logged in as : {loggedInUser?.name}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
+
+
+    
       <div className="users_navbar_container">
         <div>
           <NavLink className={"users_navbar_link"} to={"/allusers/dashboard"}>

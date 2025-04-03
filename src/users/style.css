@@ -594,6 +594,62 @@
     padding: 5px 0;
     border-radius: 5px;
 }
+
+
+
+
+
+
+
+/* select option drop css here */
+
+.company-dropdown {
+    width: 30%;
+    padding: 8px;
+    margin: 0 20px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 50px;
+    background-color: #fff;
+    cursor: pointer;
+  }
+  
+  .company-dropdown:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .alluser_alloperators_container {
     width: 97.5vw;
     overflow-x: auto;

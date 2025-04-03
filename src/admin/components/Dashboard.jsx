@@ -252,7 +252,7 @@ const Dashboard = () => {
                         style={{ cursor: "pointer" }}
                       >
                         {item?.name}
-                      </p>
+                      </p> 
                       <p onClick={() => handleLayoutModel(item?._id, item?.role)}>
                         <FiLayout />
                       </p>
