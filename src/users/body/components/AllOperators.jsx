@@ -3,16 +3,12 @@ import "../../style.css";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import apiClient from "../../../api/apiClient";
-import SmallGraph from "../graphs/smallgraph/SmallGraph";
 import Loader from "../../loader/Loader";
 import { useNavigate } from "react-router-dom";
-import { FaExternalLinkAlt } from "react-icons/fa";
-import Users from './../../../admin/components/Users';
 
 const AllOperators = () => {
   const { user } = useSelector((state) => state.userSlice);
   const [loggedInUser, setLoggedInUser] = useState({});
-  const [selectedUser, setSelectedUser] = useState({});
   const [operatorsList, setOperatorsList] = useState([]);
   const [localLoading, setLocalLoading] = useState(false);
 
@@ -31,11 +27,11 @@ const AllOperators = () => {
     }
   };
 
-    useEffect(() => {
-      if (loggedInUser) {
-        fetchAllEmployees();
-      }
-    }, [loggedInUser]);
+  useEffect(() => {
+    if (loggedInUser?.company?._id) {
+      fetchAllEmployees();
+    }
+  }, [loggedInUser]);
 
   const fetchAllEmployees = async () => {
     setLocalLoading(true);
@@ -44,17 +40,12 @@ const AllOperators = () => {
         `/auth/employee/getAllEmployeesOfSameCompany/${loggedInUser?.company?._id}`
       );
       setOperatorsList(res?.data?.data);
-      setLocalLoading(false);
     } catch (error) {
       // toast.error(error?.response?.data?.error);
+    } finally {
       setLocalLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (selectedUser?.topics) {
-    }
-  }, [selectedUser]);
 
   const navigate = useNavigate();
 
@@ -65,7 +56,7 @@ const AllOperators = () => {
   if (localLoading) {
     return <Loader />;
   }
-  console.log(operatorsList);
+
   return (
     <div className="alluser_alloperators_container">
       <div className="alluser_alloperators_scrollable-table">
@@ -78,7 +69,6 @@ const AllOperators = () => {
               <th>Company Name</th>
               <th>Address</th>
               <th>Phone No</th>
-              {/* <th>Visit</th> */}
             </tr>
           </thead>
           <tbody>
@@ -87,18 +77,9 @@ const AllOperators = () => {
                 <td>{index + 1}</td>
                 <td>{employee.name}</td>
                 <td>{employee.email}</td>
-                <td>{employee.phonenumber ? employee.phonenumber : "--"}</td>
-
-                
-                {/* <td>
-                  <FaExternalLinkAlt
-                    onClick={() => handleUserClick(employee._id)}
-                    style={{ cursor: "pointer", color: "green" }}
-                  />
-                </td> */}
-
-
-
+                <td>{employee.headerone || "--"}</td>
+                <td>{employee.headertwo || "--"}</td>
+                <td>{employee.phonenumber || "--"}</td>
               </tr>
             ))}
           </tbody>
