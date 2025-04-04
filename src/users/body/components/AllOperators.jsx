@@ -7,6 +7,7 @@ import SmallGraph from "../graphs/smallgraph/SmallGraph";
 import Loader from "../../loader/Loader";
 import { useNavigate } from "react-router-dom";
 import { FaExternalLinkAlt } from "react-icons/fa";
+import Users from './../../../admin/components/Users';
 
 const AllOperators = () => {
   const { user } = useSelector((state) => state.userSlice);
@@ -71,11 +72,13 @@ const AllOperators = () => {
         <table className="alluser_alloperators_table">
           <thead>
             <tr>
-              <th>Employee No</th>
-              <th>Name</th>
+              <th>Row</th>
+              <th>User</th>
               <th>Email</th>
+              <th>Company Name</th>
+              <th>Address</th>
               <th>Phone No</th>
-              <th>Visit</th>
+              {/* <th>Visit</th> */}
             </tr>
           </thead>
           <tbody>
@@ -85,12 +88,17 @@ const AllOperators = () => {
                 <td>{employee.name}</td>
                 <td>{employee.email}</td>
                 <td>{employee.phonenumber ? employee.phonenumber : "--"}</td>
-                <td>
+
+                
+                {/* <td>
                   <FaExternalLinkAlt
                     onClick={() => handleUserClick(employee._id)}
                     style={{ cursor: "pointer", color: "green" }}
                   />
-                </td>
+                </td> */}
+
+
+
               </tr>
             ))}
           </tbody>

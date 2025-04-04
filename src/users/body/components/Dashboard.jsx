@@ -15,7 +15,6 @@ import TodayTd from "../common/TodayTd";
 import { VscGraph } from "react-icons/vsc";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { MdEdit } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
 import ReactPaginate from "react-paginate";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
@@ -25,11 +24,11 @@ const Dashboard = () => {
   const [localLoading, setLocalLoading] = useState(false);
   const [operatorsList, setOperatorsList] = useState([]);
   const [selectedOperator, setSelectedOperator] = useState("");
+  const [selectedOperatorData, setSelectedOperatorData] = useState(null);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.userSlice);
   const [favoriteList, setFavoriteList] = useState([]);
   const [graphwlList, setGraphwlList] = useState([]);
-  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(0);
   const [sortConfig, setSortConfig] = useState({
     key: null,
@@ -40,7 +39,6 @@ const Dashboard = () => {
   const [timestamps, setTimestamps] = useState({});
   const itemsPerPage = 20;
 
-  // Update current time every second
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -48,7 +46,6 @@ const Dashboard = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Function to calculate relative time in IST
   const getRelativeTime = (topic) => {
     const timestamp = timestamps[topic];
     if (!timestamp) return "-";
@@ -66,7 +63,6 @@ const Dashboard = () => {
     return `${minutes}m ago`;
   };
 
-  // Handle timestamp updates from LiveDataTd
   const handleTimestampUpdate = useCallback((topic, timestamp) => {
     setTimestamps((prev) => ({
       ...prev,
@@ -74,7 +70,6 @@ const Dashboard = () => {
     }));
   }, []);
 
-  // Fetch user details and operators list
   const fetchUserDetails = useCallback(async () => {
     setLocalLoading(true);
     try {
@@ -85,12 +80,16 @@ const Dashboard = () => {
       setFavoriteList(userData?.favorites || []);
       setGraphwlList(userData?.graphwl || []);
 
-      // Fetch operators list if company ID exists
       if (userData?.company?._id) {
         const operatorsRes = await apiClient.get(
           `/auth/employee/getAllEmployeesOfSameCompany/${userData.company._id}`
         );
-        setOperatorsList(operatorsRes?.data?.data || []);
+        const operators = operatorsRes?.data?.data || [];
+        setOperatorsList(operators);
+        // Set the first operator as default if none was previously selected
+        if (operators.length > 0 && !selectedOperator) {
+          setSelectedOperator(operators[0]._id);
+        }
       }
     } catch (error) {
       toast.error(
@@ -99,18 +98,37 @@ const Dashboard = () => {
     } finally {
       setLocalLoading(false);
     }
-  }, [dispatch, user.id, user.role]);
+  }, [dispatch, user.id, user.role, selectedOperator]);
+
+  const fetchOperatorDetails = useCallback(async (operatorId) => {
+    if (!operatorId) return;
+    setLocalLoading(true);
+    try {
+      const res = await apiClient.get(`/auth/employee/${operatorId}`);
+      setSelectedOperatorData(res?.data?.data);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.error || "Failed to fetch operator details"
+      );
+    } finally {
+      setLocalLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (user.id) fetchUserDetails();
   }, [user.id, fetchUserDetails]);
 
-  // Reset current page when search query changes
+  useEffect(() => {
+    if (selectedOperator) {
+      fetchOperatorDetails(selectedOperator);
+    }
+  }, [selectedOperator, fetchOperatorDetails]);
+
   useEffect(() => {
     setCurrentPage(0);
   }, [searchQuery]);
 
-  // Favorite and graph watchlist handlers
   const handleAddFavorite = useCallback(
     async (topic) => {
       try {
@@ -182,12 +200,10 @@ const Dashboard = () => {
     [user.role, user.id]
   );
 
-  // Pagination handler
   const handlePageClick = useCallback(({ selected }) => {
     setCurrentPage(selected);
   }, []);
 
-  // Sorting functionality
   const handleSort = useCallback((key) => {
     setSortConfig((prevSortConfig) => {
       let direction = "asc";
@@ -220,26 +236,23 @@ const Dashboard = () => {
     [sortConfig]
   );
 
-  // Parse topics and add dummy data for sorting
   const parsedTopics = useMemo(() => {
-    return (
-      loggedInUser?.topics?.map((topic) => {
-        const [path, unit] = topic.split("|");
-        const tagName = path.split("/")[2];
-        return {
-          topic,
-          tagName,
-          unit: unit || "-",
-          isFFT: unit === "fft",
-          weekMax: Math.random() * 100,
-          yesterdayMax: Math.random() * 100,
-          todayMax: Math.random() * 100,
-        };
-      }) || []
-    );
-  }, [loggedInUser?.topics]);
+    const topics = selectedOperatorData?.topics || [];
+    return topics.map((topic) => {
+      const [path, unit] = topic.split("|");
+      const tagName = path.split("/")[2];
+      return {
+        topic,
+        tagName,
+        unit: unit || "-",
+        isFFT: unit === "fft",
+        weekMax: Math.random() * 100,
+        yesterdayMax: Math.random() * 100,
+        todayMax: Math.random() * 100,
+      };
+    });
+  }, [selectedOperatorData?.topics]);
 
-  // Filter topics based on search query
   const filteredParsedTopics = useMemo(() => {
     if (!searchQuery.trim()) return parsedTopics;
     const query = searchQuery.trim().toLowerCase();
@@ -248,7 +261,6 @@ const Dashboard = () => {
     );
   }, [parsedTopics, searchQuery]);
 
-  // Sort topics based on sort configuration
   const sortedParsedTopics = useMemo(() => {
     let sortableItems = [...filteredParsedTopics];
     if (sortConfig.key && sortConfig.direction !== "none") {
@@ -265,32 +277,25 @@ const Dashboard = () => {
     return sortableItems;
   }, [filteredParsedTopics, sortConfig]);
 
-  // Memoize the current page's items
   const currentItems = useMemo(() => {
     const offset = currentPage * itemsPerPage;
     return sortedParsedTopics.slice(offset, offset + itemsPerPage);
   }, [sortedParsedTopics, currentPage, itemsPerPage]);
 
-  // Memoize page count calculation
   const pageCount = useMemo(
     () => Math.ceil(sortedParsedTopics.length / itemsPerPage),
     [sortedParsedTopics, itemsPerPage]
   );
 
-  // Handle operator selection
   const handleOperatorChange = (e) => {
     const operatorId = e.target.value;
     setSelectedOperator(operatorId);
-    if (operatorId) {
-      navigate(`/allusers/singleuserdashboard/${operatorId}`);
-    }
   };
 
   if (localLoading) return <Loader />;
 
   return (
     <div className="allusers_dashboard_main_container">
-      {/* Search Bar and Operators Dropdown */}
       <div style={{ maxWidth: "100vw", margin: "20px auto", padding: "0 15px" }}>
         <input
           className="allusers_dashboard_search_by_tagname_main_container_"
@@ -314,197 +319,175 @@ const Dashboard = () => {
           value={selectedOperator}
           onChange={handleOperatorChange}
         >
-          <option value="" disabled>
-            Select an Operator
-          </option>
           {operatorsList.map((operator) => (
             <option key={operator._id} value={operator._id}>
-              {operator.name}     
-
-
-              {/* ({operator.email})  u want email also in drop down pass email also */}
+              {operator.name}
             </option>
           ))}
         </select>
       </div>
 
-      <div className="alluser_alloperators_container">
-        <div className="alluser_alloperators_scrollable-table">
-          <table className="alluser_alloperators_table">
-            <thead>
-              <tr>
-                <th style={{ background: "red" }}>TagName</th>
-                <th
-                  className="allusers_dashboard_live_data_th"
-                  style={{ background: "rgb(150, 2, 208)" }}
-                >
-                  Live
-                </th>
-                <th>Unit</th>
-                <th>Relative</th>
-                <th>TodayMax</th>
-                <th>YesterdayMax</th>
-                <th>WeekMax</th>
-                <th>Report</th>
-                <th>LayoutView</th>
-                <th>Edit/Graph/Digital</th>
-                <th>Graph[WL]</th>
-                <th>WatchList</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentItems.map(({ topic, tagName, unit, isFFT }, index) => (
-                <tr key={`${topic}-${index}`}>
-                  <td style={{ background: "#34495e", color: "white" }}>
-                    {tagName}
-                  </td>
-                  <LiveDataTd
-                    topic={topic}
-                    onTimestampUpdate={handleTimestampUpdate}
-                  />
-                  <td style={{ background: "#34495e", color: "white" }}>
-                    {unit}
-                  </td>
-                  <td style={{ background: "#34495e", color: "white" }}>
-                    {getRelativeTime(topic)}
-                  </td>
-                  <TodayTd topic={topic} />
-                  <YestardayTd topic={topic} />
-                  <WeekTd topic={topic} />
-                  <td>
-                    {!isFFT && (
-                      <BiSolidReport
+      {selectedOperator && (
+        <div className="alluser_alloperators_container">
+          <div className="alluser_alloperators_scrollable-table">
+            <table className="alluser_alloperators_table">
+              <thead>
+                <tr>
+                  <th style={{ background: "red" }}>TagName</th>
+                  <th
+                    className="allusers_dashboard_live_data_th"
+                    style={{ background: "rgb(150, 2, 208)" }}
+                  >
+                    Live
+                  </th>
+                  <th>Unit</th>
+                  <th>Relative</th>
+                  <th>TodayMax</th>
+                  <th>YesterdayMax</th>
+                  <th>WeekMax</th>
+                  <th>Report</th>
+                  <th>LayoutView</th>
+                  <th>Edit/Graph/Digital</th>
+                  <th>Graph[WL]</th>
+                  <th>WatchList</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentItems.map(({ topic, tagName, unit, isFFT }, index) => (
+                  <tr key={`${topic}-${index}`}>
+                    <td style={{ background: "#34495e", color: "white" }}>
+                      {tagName}
+                    </td>
+                    <LiveDataTd
+                      topic={topic}
+                      onTimestampUpdate={handleTimestampUpdate}
+                    />
+                    <td style={{ background: "#34495e", color: "white" }}>
+                      {unit}
+                    </td>
+                    <td style={{ background: "#34495e", color: "white" }}>
+                      {getRelativeTime(topic)}
+                    </td>
+                    <TodayTd topic={topic} />
+                    <YestardayTd topic={topic} />
+                    <WeekTd topic={topic} />
+                    <td>
+                      {!isFFT && (
+                        <BiSolidReport
+                          size={20}
+                          style={{ cursor: "pointer", color: "gray" }}
+                          className="icon"
+                          onClick={() =>
+                            window.location.href = `/allusers/report/${encodeURIComponent(topic)}`
+                          }
+                        />
+                      )}
+                    </td>
+                    <td>
+                      <LuLayoutDashboard
                         size={20}
                         style={{ cursor: "pointer", color: "gray" }}
                         className="icon"
                         onClick={() =>
-                          navigate(
-                            `/allusers/report/${encodeURIComponent(topic)}`
-                          )
+                          window.location.href = `/allusers/layoutview/${encodeURIComponent(topic)}/${loggedInUser?.layout}`
                         }
                       />
-                    )}
-                  </td>
-                  <td>
-                    <LuLayoutDashboard
-                      size={20}
-                      style={{ cursor: "pointer", color: "gray" }}
-                      className="icon"
-                      onClick={() =>
-                        navigate(
-                          `/allusers/layoutview/${encodeURIComponent(topic)}/${
-                            loggedInUser?.layout
-                          }`
-                        )
-                      }
-                    />
-                  </td>
-                  <td className="allusers_dashboard_graph_digital_td">
-                    <button>
-                      {!isFFT && (
-                        <MdEdit
-                          size={18}
-                          style={{ cursor: "pointer" }}
-                          className="icon"
-                          onClick={() =>
-                            navigate(
-                              `/allusers/editsinglegraph/${encodeURIComponent(
-                                topic
-                              )}`
-                            )
-                          }
-                        />
-                      )}
-                    </button>
-                    <button
-                      onClick={() =>
-                        navigate(
-                          `/allusers/viewsinglegraph/${encodeURIComponent(
-                            topic
-                          )}`
-                        )
-                      }
-                    >
-                      <VscGraph />
-                    </button>
-                    {!isFFT && (
+                    </td>
+                    <td className="allusers_dashboard_graph_digital_td">
+                      <button>
+                        {!isFFT && (
+                          <MdEdit
+                            size={18}
+                            style={{ cursor: "pointer" }}
+                            className="icon"
+                            onClick={() =>
+                              window.location.href = `/allusers/editsinglegraph/${encodeURIComponent(topic)}`
+                            }
+                          />
+                        )}
+                      </button>
                       <button
                         onClick={() =>
-                          navigate(
-                            `/allusers/singledigitalmeter/${encodeURIComponent(
-                              topic
-                            )}/${user.role}/${user.id}`
-                          )
+                          window.location.href = `/allusers/viewsinglegraph/${encodeURIComponent(topic)}`
                         }
                       >
-                        <FaDigitalOcean style={{ cursor: "pointer" }} />
+                        <VscGraph />
                       </button>
-                    )}
-                  </td>
-                  <td>
-                    {graphwlList.includes(topic) ? (
-                      <BsBookmarkStarFill
-                        color="rgb(158, 32, 189)"
-                        size={20}
-                        style={{ cursor: "pointer" }}
-                        onClick={() => handleRemoveGraphwl(topic)}
-                      />
-                    ) : (
-                      <FaRegBookmark
-                        color="rgb(158, 32, 189)"
-                        size={18}
-                        style={{ cursor: "pointer" }}
-                        onClick={() => handleAddGraphwl(topic)}
-                      />
-                    )}
-                  </td>
-                  <td>
-                    {favoriteList.includes(topic) ? (
-                      <BsBookmarkStarFill
-                        color="green"
-                        size={20}
-                        style={{ cursor: "pointer" }}
-                        onClick={() => handleRemoveFavorite(topic)}
-                      />
-                    ) : (
-                      <FaRegBookmark
-                        color="green"
-                        size={18}
-                        style={{ cursor: "pointer" }}
-                        onClick={() => handleAddFavorite(topic)}
-                      />
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      {!isFFT && (
+                        <button
+                          onClick={() =>
+                            window.location.href = `/allusers/singledigitalmeter/${encodeURIComponent(topic)}/${user.role}/${user.id}`
+                          }
+                        >
+                          <FaDigitalOcean style={{ cursor: "pointer" }} />
+                        </button>
+                      )}
+                    </td>
+                    <td>
+                      {graphwlList.includes(topic) ? (
+                        <BsBookmarkStarFill
+                          color="rgb(158, 32, 189)"
+                          size={20}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleRemoveGraphwl(topic)}
+                        />
+                      ) : (
+                        <FaRegBookmark
+                          color="rgb(158, 32, 189)"
+                          size={18}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleAddGraphwl(topic)}
+                        />
+                      )}
+                    </td>
+                    <td>
+                      {favoriteList.includes(topic) ? (
+                        <BsBookmarkStarFill
+                          color="green"
+                          size={20}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleRemoveFavorite(topic)}
+                        />
+                      ) : (
+                        <FaRegBookmark
+                          color="green"
+                          size={18}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleAddFavorite(topic)}
+                        />
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-          <div className="d-flex justify-content-center mt-4 mb-4">
-            <ReactPaginate
-              previousLabel="Previous"
-              nextLabel="Next"
-              breakLabel="..."
-              pageCount={pageCount}
-              marginPagesDisplayed={2}
-              pageRangeDisplayed={2}
-              onPageChange={handlePageClick}
-              containerClassName="pagination"
-              pageClassName="page-item"
-              pageLinkClassName="page-link"
-              previousClassName="page-item"
-              previousLinkClassName="page-link"
-              nextClassName="page-item"
-              nextLinkClassName="page-link"
-              breakClassName="page-item"
-              breakLinkClassName="page-link"
-              activeClassName="active"
-              disabledClassName="disabled"
-              forcePage={currentPage}
-            />
+            <div className="d-flex justify-content-center mt-4 mb-4">
+              <ReactPaginate
+                previousLabel="Previous"
+                nextLabel="Next"
+                breakLabel="..."
+                pageCount={pageCount}
+                marginPagesDisplayed={2}
+                pageRangeDisplayed={2}
+                onPageChange={handlePageClick}
+                containerClassName="pagination"
+                pageClassName="page-item"
+                pageLinkClassName="page-link"
+                previousClassName="page-item"
+                previousLinkClassName="page-link"
+                nextClassName="page-item"
+                nextLinkClassName="page-link"
+                breakClassName="page-item"
+                breakLinkClassName="page-link"
+                activeClassName="active"
+                disabledClassName="disabled"
+                forcePage={currentPage}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

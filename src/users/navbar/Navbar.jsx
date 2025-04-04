@@ -18,6 +18,7 @@ import { HiMiniBuildingOffice } from "react-icons/hi2";
 import { FaUser } from "react-icons/fa";
 import { FaInfoCircle } from 'react-icons/fa';
 import iiot from '../../authentication/common/LoginBannerLogo/iiot.jpg'
+import Users from './../../admin/components/Users';
 
 const Navbar = () => {
   const { user } = useSelector((state) => state.userSlice);
@@ -153,7 +154,7 @@ const Navbar = () => {
             <>
               <div className="users_navbar_link_separator"></div>
               <NavLink className={"users_navbar_link"} to={"/allusers/users"}>
-                Operators
+                Users
               </NavLink>{" "}
             </>
           )}
